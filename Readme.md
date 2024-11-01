@@ -1,4 +1,4 @@
-pip -r requirements.txt
+pip install -r requirements.txt
 
 训练：
 python .\train.py --output_string USER_DEFINE
