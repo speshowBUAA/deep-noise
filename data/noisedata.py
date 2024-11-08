@@ -34,16 +34,19 @@ class NoiseData(Dataset):
     def __getitem__(self, idx):
         keys = self.dataFrame.keys()
         if self.use_type:
-            input = [self.dataFrame[keys[0]][idx], self.dataFrame[keys[1]][idx], self.dataFrame[keys[2]][idx], self.dataFrame[keys[3]][idx]]
+            input = [self.dataFrame[keys[1]][idx], self.dataFrame[keys[2]][idx], self.dataFrame[keys[3]][idx]]
             output = [self.dataFrame[keys[len(keys)-1]][idx]]
+            type = [self.dataFrame[keys[0]][idx]]
         else:
             input = [self.dataFrame[keys[1]][idx], self.dataFrame[keys[2]][idx], self.dataFrame[keys[3]][idx]]
             output = [self.dataFrame[keys[len(keys)-1]][idx]]
+            type = 0
         if self.transform is not None:
             input = self.transform(input)
         input = torch.tensor(input).to(torch.float32)
         output = torch.tensor(output).to(torch.float32)
-        return input, output
+        type = torch.tensor(type)
+        return input, output, type
     
 class NoiseDataFiltered(Dataset):
     def __init__(self):

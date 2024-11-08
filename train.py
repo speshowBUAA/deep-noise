@@ -40,14 +40,14 @@ if __name__ == '__main__':
     transformations = Normalizer(mean=[354.16, 32.17, 2649.37], std=[187.5, 647.17, 2045.62])
 
     if args.dataset == 'NoiseData':
-        dataset = NoiseData(dir=args.data_dir, filename=args.filename, transform=transformations)
+        dataset = NoiseData(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True)
 
     train_loader = DataLoader(dataset=dataset,
                             batch_size=batch_size,
                             shuffle=True,
                             num_workers=2)
     
-    model = NonLinear(nc=400)
+    model = NonLinear(out_nc=18)
     criterion = nn.MSELoss()
     optimizer = optim.SGD(model.parameters(), lr=args.lr)
     milestones = args.lr_decay
@@ -57,11 +57,12 @@ if __name__ == '__main__':
     Loss_writer = SummaryWriter(log_dir = args.log_dir)
 
     for epoch in range(args.num_epochs):
-        for i, (inputs, outputs) in tqdm(enumerate(train_loader)):
+        for i, (inputs, outputs, types) in tqdm(enumerate(train_loader)):
             inputs = Variable(inputs)
             labels = Variable(outputs)
             optimizer.zero_grad()
             preds = model(inputs)
+            preds0 = preds.gather(1, types)
 
             # calculate loss
             loss = criterion(preds, labels)
