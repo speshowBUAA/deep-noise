@@ -40,12 +40,18 @@ if __name__ == '__main__':
     transformations = Normalizer(mean=[354.16, 32.17, 2649.37], std=[187.5, 647.17, 2045.62])
 
     if args.dataset == 'NoiseData':
-        dataset = NoiseData(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True)
+        train_dataset = NoiseData(dir=args.data_dir, filename=args.train_filename, transform=transformations, use_type=True)
+        test_dataset = NoiseData(dir=args.data_dir, filename=args.test_filename, transform=transformations, use_type=True)
 
-    train_loader = DataLoader(dataset=dataset,
+    train_loader = DataLoader(dataset=train_dataset,
                             batch_size=batch_size,
                             shuffle=True,
                             num_workers=2)
+    
+    test_loader = DataLoader(dataset=test_dataset,
+                           batch_size=batch_size,
+                           shuffle=False,
+                           num_workers=2)
     
     model = NonLinear(out_nc=18)
     criterion = nn.MSELoss()
@@ -72,7 +78,7 @@ if __name__ == '__main__':
             Loss_writer.add_scalar('train_loss', loss, epoch)
             if (i+1) % 100 == 0:
                 print ('Epoch [%d/%d], Iter [%d/%d] Losses: %.4f'
-                       %(epoch+1, num_epochs, i+1, len(dataset)//batch_size, loss))
+                       %(epoch+1, num_epochs, i+1, len(train_dataset)//batch_size, loss))
             # Save models at numbered epochs.
 
         scheduler.step()

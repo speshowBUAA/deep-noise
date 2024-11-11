@@ -6,13 +6,18 @@ import torch
 import numpy as np
 
 class NoiseData(Dataset):
-    def __init__(self, dir='../data', filename='data_after.xlsx', use_type = None, transform = None):
+    def __init__(self, dir='../data', filename='data_final_train.xlsx', use_type=None, transform=None):
         self.dir = dir
         self.filename = filename
         self.use_type = use_type
         self.transform = transform
         try:
-            all_sheets = pd.read_excel(os.path.join(self.dir, self.filename), sheet_name=None)
+            if 'train' in filename:
+                all_sheets = pd.read_excel(os.path.join(self.dir, 'data_final_train.xlsx'), sheet_name=None)
+            elif 'test' in filename:
+                all_sheets = pd.read_excel(os.path.join(self.dir, 'data_final_test.xlsx'), sheet_name=None)
+            else:
+                all_sheets = pd.read_excel(os.path.join(self.dir, self.filename), sheet_name=None)
         except Exception as e:
             raise e
         self.dataFrame = pd.DataFrame()
