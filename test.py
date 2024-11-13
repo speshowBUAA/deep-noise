@@ -56,4 +56,4 @@ if __name__ == '__main__':
         test_error += torch.sum(test_loss)
         # print(preds, labels, test_loss, torch.sum(test_loss))
     
-    print('Test error on the ' + str(total) +' test samples. MSE: %.4f' % (test_error / total))
+    print('Test error on the ' + str(total) +' test samples. MSE: %.4f' % (test_error * batch_size/ total))
