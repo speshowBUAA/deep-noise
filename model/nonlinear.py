@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 class NonLinear(nn.Module):
-    def __init__(self, in_nc=3, nc=100, out_nc=1):
+    def __init__(self, in_nc=3, nc=3200, out_nc=18):
         super(NonLinear, self).__init__()
 
         self.hidden = nn.Linear(in_nc, nc)

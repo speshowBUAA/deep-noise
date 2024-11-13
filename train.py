@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--data_dir', dest='data_dir', help='Directory path for data.',
           default='../data', type=str)
     parser.add_argument('--filename', dest='filename', help='data filename.',
-          default='data_after.xlsx', type=str)
+          default='data_final_train.xlsx', type=str)
     parser.add_argument('--output_string', dest='output_string', help='String appended to output snapshots.', default = '', type=str)
     parser.add_argument('--dataset', dest='dataset', help='Dataset type.', default='NoiseData', type=str)
     parser.add_argument('--log_dir', dest='log_dir', type = str, default = 'logs/train')
@@ -40,18 +40,12 @@ if __name__ == '__main__':
     transformations = Normalizer(mean=[354.16, 32.17, 2649.37], std=[187.5, 647.17, 2045.62])
 
     if args.dataset == 'NoiseData':
-        train_dataset = NoiseData(dir=args.data_dir, filename=args.train_filename, transform=transformations, use_type=True)
-        test_dataset = NoiseData(dir=args.data_dir, filename=args.test_filename, transform=transformations, use_type=True)
+        train_dataset = NoiseData(dir=args.data_dir, filename='data_final_train.xlsx', transform=transformations, use_type=True)
 
     train_loader = DataLoader(dataset=train_dataset,
                             batch_size=batch_size,
                             shuffle=True,
                             num_workers=2)
-    
-    test_loader = DataLoader(dataset=test_dataset,
-                           batch_size=batch_size,
-                           shuffle=False,
-                           num_workers=2)
     
     model = NonLinear(out_nc=18)
     criterion = nn.MSELoss()
@@ -68,7 +62,7 @@ if __name__ == '__main__':
             labels = Variable(outputs)
             optimizer.zero_grad()
             preds = model(inputs)
-            preds0 = preds.gather(1, types)
+            preds = preds.gather(1, types)
 
             # calculate loss
             loss = criterion(preds, labels)
