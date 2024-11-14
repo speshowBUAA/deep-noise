@@ -31,7 +31,7 @@ if __name__ == '__main__':
     transformations = Normalizer(mean=[354.16, 32.17, 2649.37], std=[187.5, 647.17, 2045.62])
 
     if args.dataset == 'NoiseData':
-        dataset = NoiseData(dir=args.data_dir, filename='data_final_test.xlsx', transform=transformations)
+        dataset = NoiseData(dir=args.data_dir, filename='data_final_test.xlsx', transform=transformations, use_type=True)
 
     print ('Loading snapshot.')
     # Load snapshot
