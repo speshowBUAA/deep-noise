@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument('--dataset', dest='dataset', help='Dataset type.', default='NoiseData', type=str)
     parser.add_argument('--snapshot', dest='snapshot', help='Name of model snapshot.',
           default='', type=str)
+    parser.add_argument('--nc', dest='nc', type = int, default = 400)
     args = parser.parse_args()
     return args
 
@@ -34,7 +35,7 @@ if __name__ == '__main__':
 
     print ('Loading snapshot.')
     # Load snapshot
-    model = NonLinear()
+    model = NonLinear(nc=args.nc)
     saved_state_dict = torch.load(snapshot_path, weights_only=True)
     model.load_state_dict(saved_state_dict)
 

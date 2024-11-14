@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument('--output_string', dest='output_string', help='String appended to output snapshots.', default = '', type=str)
     parser.add_argument('--dataset', dest='dataset', help='Dataset type.', default='NoiseData', type=str)
     parser.add_argument('--log_dir', dest='log_dir', type = str, default = 'logs/train')
+    parser.add_argument('--nc', dest='nc', type = int, default = 400)
     args = parser.parse_args()
     return args
 
@@ -47,7 +48,7 @@ if __name__ == '__main__':
                             shuffle=True,
                             num_workers=2)
     
-    model = NonLinear(out_nc=18)
+    model = NonLinear(nc=args.nc)
     criterion = nn.MSELoss()
     optimizer = optim.SGD(model.parameters(), lr=args.lr)
     milestones = args.lr_decay
