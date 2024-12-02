@@ -22,8 +22,11 @@ class NoiseData(Dataset):
             raise e
         self.dataFrame = pd.DataFrame()
         self.sheet_names = []
-        for sheet_name, df in all_sheets.items():
+        self.sheet_indices = []
+        
+        for sheet_idx, (sheet_name, df) in enumerate(all_sheets.items()):
             self.sheet_names.append(sheet_name)
+            df['sheet_idx'] = sheet_idx
             self.dataFrame = pd.concat([self.dataFrame, df], ignore_index=True)
         
         self.le = []
@@ -40,18 +43,36 @@ class NoiseData(Dataset):
         keys = self.dataFrame.keys()
         if self.use_type:
             input = [self.dataFrame[keys[1]][idx], self.dataFrame[keys[2]][idx], self.dataFrame[keys[3]][idx]]
-            output = [self.dataFrame[keys[len(keys)-1]][idx]]
+            output = [self.dataFrame[keys[len(keys)-2]][idx]]
             type = [self.dataFrame[keys[0]][idx]]
+            sheet_idx = self.dataFrame['sheet_idx'][idx]
         else:
             input = [self.dataFrame[keys[1]][idx], self.dataFrame[keys[2]][idx], self.dataFrame[keys[3]][idx]]
-            output = [self.dataFrame[keys[len(keys)-1]][idx]]
+            output = [self.dataFrame[keys[len(keys)-2]][idx]]
             type = 0
+            sheet_idx = self.dataFrame['sheet_idx'][idx]
+
         if self.transform is not None:
             input = self.transform(input)
-        input = torch.tensor(input).to(torch.float32)
-        output = torch.tensor(output).to(torch.float32)
-        type = torch.tensor(type)
-        return input, output, type
+        
+        if isinstance(input, torch.Tensor):
+            input = input.clone().detach()
+        else:
+            input = torch.FloatTensor(input)
+            
+        if isinstance(output, torch.Tensor):
+            output = output.clone().detach()
+        else:
+            output = torch.FloatTensor(output)
+            
+        if isinstance(type, torch.Tensor):
+            type = type.clone().detach()
+        else:
+            type = torch.LongTensor(type)
+            
+        sheet_idx = torch.LongTensor([sheet_idx])
+            
+        return input, output, type, sheet_idx
     
 class NoiseDataFiltered(Dataset):
     def __init__(self):
