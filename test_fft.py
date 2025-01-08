@@ -3,7 +3,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from data.noisedata import NoiseData, NoiseDataFFT
 from utils.transform import Normalizer
-from model.nonlinear import NonLinear, NonLinearType, NonLinearTypeBin
+from model.nonlinear import NonLinear, NonLinearType, NonLinearTypeBin, NonLinearTypeBinModel
 import torch
 from torch.autograd import Variable
 from torch import nn
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     print ('Loading snapshot.')
     # Load snapshot
-    model = NonLinearTypeBin(nc=400, out_nc=14, num_bins=80)
+    model = NonLinearTypeBinModel(nc=400, out_nc=14, num_bins=80, num_sheets=4)
     saved_state_dict = torch.load(snapshot_path, weights_only=True)
     model.load_state_dict(saved_state_dict)
     model.eval()
@@ -49,11 +49,16 @@ if __name__ == '__main__':
     test_cos_error = .0
     test_mse_error = .0
     total = 0
-    for i, (inputs, outputs, types) in tqdm(enumerate(test_loader)):
+    for i, (inputs, outputs, types, sheet_idx) in tqdm(enumerate(test_loader)):
         total += outputs.size(0)
         inputs = Variable(inputs)
         labels = Variable(outputs)
-        preds = model(inputs, types)
+        preds = model(inputs)
+        batch_indices = torch.arange(preds.size(0))
+        preds = preds[batch_indices, sheet_idx.squeeze(), :, :]
+        types = types.view(-1, 1, 1) 
+        preds = preds.gather(1, types.expand(-1, 1, preds.size(2)))
+        preds = preds.squeeze(1)
 
         # calculate loss
         loss_flag = torch.ones(outputs.size(0))

@@ -66,3 +66,19 @@ class NonLinearMultiBin(nn.Module):
         output1 = self.out1(x)
         output2 = self.out2(x)
         return output, output0, output1, output2
+
+class NonLinearTypeBinModel(nn.Module):
+    def __init__(self, in_nc=3, nc=1600, out_nc=18, num_bins=51, num_sheets=4):
+        super(NonLinearTypeBinModel, self).__init__()
+        self.num_bins = num_bins
+        self.num_sheets = num_sheets
+        self.out_nc = out_nc
+        self.hidden = nn.Linear(in_nc, nc)
+        self.relu = nn.LeakyReLU()
+        self.out = nn.Linear(nc, out_nc * num_bins * num_sheets)  # 输出维度为 num_sheets * out_nc * num_bins
+
+    def forward(self, inp):
+        x = self.relu(self.hidden(inp))
+        out = self.out(x)
+        output = out.view(-1, self.num_sheets, self.out_nc, self.num_bins)
+        return output
