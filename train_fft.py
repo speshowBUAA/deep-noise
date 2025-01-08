@@ -32,6 +32,7 @@ def parse_args():
           default='', type=str)
     parser.add_argument('--dataset', dest='dataset', help='Dataset type.', default='NoiseData', type=str)
     parser.add_argument('--log_dir', dest='log_dir', type = str, default = 'logs/train')
+    parser.add_argument('--nc', dest='nc', type = int, default = 400)
     args = parser.parse_args()
     return args
 
@@ -50,7 +51,7 @@ if __name__ == '__main__':
                             num_workers=2)
     
 
-    model = NonLinearTypeBinModel(nc=400, out_nc=14, num_bins=80, num_sheets=4)
+    model = NonLinearTypeBinModel(nc = args.nc, out_nc=14, num_bins=80, num_sheets=4)
     if args.snapshot != '':
         saved_state_dict = torch.load(args.snapshot, weights_only=True)
         model.load_state_dict({name: weight for name, weight in saved_state_dict.items() if name.startswith('hidden')}, strict=False)
