@@ -7,13 +7,13 @@ class NonLinear(nn.Module):
 
         self.hidden = nn.Linear(in_nc, nc)
         self.relu = nn.LeakyReLU()
-        self.out = nn.Linear(nc, out_nc)
-
+        self.out = nn.Linear(nc, out_nc * sheet_num)
+        self.sheet_num = sheet_num
+        self.out_nc = out_nc
 
     def forward(self, inp):
         x = self.relu(self.hidden(inp))
         output = self.out(x)
-
         return output
     
 
