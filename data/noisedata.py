@@ -155,8 +155,9 @@ class NoiseDataFFT(Dataset):
             raise e
         self.dataFrame = pd.DataFrame()
         self.sheet_names = []
-        for sheet_name, df in all_sheets.items():
+        for sheet_idx, (sheet_name, df) in enumerate(all_sheets.items()):
             self.sheet_names.append(sheet_name)
+            df['sheet_idx'] = sheet_idx
             self.dataFrame = pd.concat([self.dataFrame, df], ignore_index=True)
         
         self.le = []
@@ -176,6 +177,7 @@ class NoiseDataFFT(Dataset):
         M1 = [self.dataFrame[keys[4]][idx]]
         # output = self.dataFrame.iloc[idx, 5:].tolist()   # 0~25600 401维
         output = self.dataFrame.iloc[idx, 5:85].tolist()   # 0~4992 80维
+        sheet_idx = self.dataFrame['sheet_idx'][idx]
         if self.transform is not None:
             input = self.transform(input)
         input = torch.tensor(input).to(torch.float32)
@@ -184,7 +186,7 @@ class NoiseDataFFT(Dataset):
         if self.debug:
             return input, 10*(torch.log10(output/4e-10)), self.dataFrame.iloc[idx, 5:], M1
         if self.use_type:
-            type_ = torch.LongTensor(np.array(range(self.dataFrame[keys[0]][idx]*self.fft_out, (self.dataFrame[keys[0]][idx]+1)*self.fft_out)))
-            return input, 10*(torch.log10(output/4e-10)), type_
+            type_ = torch.LongTensor([self.dataFrame[keys[0]][idx]])
+            return input, 10*(torch.log10(output/4e-10)), type_, sheet_idx
         else:
-            return input, 10*(torch.log10(output/4e-10))
+            return input, 10*(torch.log10(output/4e-10)), sheet_idx

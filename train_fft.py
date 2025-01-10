@@ -6,7 +6,7 @@ from torch import nn, optim
 import argparse
 from torch.utils.data import DataLoader
 from data.noisedata import NoiseData, NoiseDataFFT
-from model.nonlinear import NonLinear, NonLinearType, NonLinearTypeBin
+from model.nonlinear import NonLinear, NonLinearType, NonLinearTypeBin, NonLinearTypeBinModel
 from utils.transform import Normalizer
 from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
@@ -32,6 +32,7 @@ def parse_args():
           default='', type=str)
     parser.add_argument('--dataset', dest='dataset', help='Dataset type.', default='NoiseData', type=str)
     parser.add_argument('--log_dir', dest='log_dir', type = str, default = 'logs/train')
+    parser.add_argument('--nc', dest='nc', type = int, default = 400)
     args = parser.parse_args()
     return args
 
@@ -49,7 +50,8 @@ if __name__ == '__main__':
                             shuffle=True,
                             num_workers=2)
     
-    model = NonLinearTypeBin(nc=400, out_nc=14, num_bins=80)
+
+    model = NonLinearTypeBinModel(nc = args.nc, out_nc=14, num_bins=80, num_sheets=4)
     if args.snapshot != '':
         saved_state_dict = torch.load(args.snapshot, weights_only=True)
         model.load_state_dict({name: weight for name, weight in saved_state_dict.items() if name.startswith('hidden')}, strict=False)
@@ -65,11 +67,16 @@ if __name__ == '__main__':
     Loss_writer = SummaryWriter(log_dir = args.log_dir)
 
     for epoch in range(args.num_epochs):
-        for i, (inputs, outputs, types) in tqdm(enumerate(train_loader)):
+        for i, (inputs, outputs, types, sheet_idx) in tqdm(enumerate(train_loader)):
             inputs = Variable(inputs)
             labels = Variable(outputs)
             optimizer.zero_grad()
-            preds = model(inputs, types)
+            preds = model(inputs)
+            batch_indices = torch.arange(preds.size(0))
+            preds = preds[batch_indices, sheet_idx.squeeze(), :, :]
+            types = types.view(-1, 1, 1)
+            preds = preds.gather(1, types.expand(-1, 1, preds.size(2)))
+            preds = preds.squeeze(1)
 
             # calculate loss
             loss_flag = torch.ones(inputs.size(0))
