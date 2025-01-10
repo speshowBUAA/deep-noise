@@ -5,8 +5,8 @@ import torch
 from torch import nn, optim
 import argparse
 from torch.utils.data import DataLoader
-from data.noisedata import NoiseData
-from model.nonlinear import NonLinear, NonLinearType
+from data.noisedata import NoiseData, NoiseDataFFT
+from model.nonlinear import NonLinear, NonLinearType, NonLinearTypeBin
 from utils.transform import Normalizer
 from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
@@ -21,39 +21,41 @@ def parse_args():
     parser.add_argument('--batch_size', dest='batch_size', help='Batch size.',
           default=4, type=int)
     parser.add_argument('--lr', dest='lr', help='Base learning rate.',
-          default=0.005, type=float)
+          default=0.01, type=float)
     parser.add_argument('--lr_decay', type = list, default = [100,200,300,400], help = 'learning rate decay')
     parser.add_argument('--data_dir', dest='data_dir', help='Directory path for data.',
           default='../data', type=str)
     parser.add_argument('--filename', dest='filename', help='data filename.',
-          default='data_final_train.xlsx', type=str)
+          default='data_final_fft_train.xlsx', type=str)
     parser.add_argument('--output_string', dest='output_string', help='String appended to output snapshots.', default = '', type=str)
+    parser.add_argument('--snapshot', dest='snapshot', help='Path of model snapshot.',
+          default='', type=str)
     parser.add_argument('--dataset', dest='dataset', help='Dataset type.', default='NoiseData', type=str)
     parser.add_argument('--log_dir', dest='log_dir', type = str, default = 'logs/train')
-    parser.add_argument('--nc', dest='nc', type = int, default = 400)
     args = parser.parse_args()
     return args
 
 if __name__ == '__main__':
     args = parse_args()
-    
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'Using device: {device}')
-    
     num_epochs = args.num_epochs
     batch_size = args.batch_size
     transformations = Normalizer(mean=[354.16, 32.17, 2649.37], std=[187.5, 647.17, 2045.62])
 
     if args.dataset == 'NoiseData':
-        dataset = NoiseData(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True)
+        dataset = NoiseDataFFT(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True, fft_out=80)
 
-    train_loader = DataLoader(dataset=train_dataset,
+    train_loader = DataLoader(dataset=dataset,
                             batch_size=batch_size,
                             shuffle=True,
                             num_workers=2)
     
-    model = NonLinear(nc = args.nc).to(device)
-    criterion = nn.MSELoss().to(device)
+    model = NonLinearTypeBin(nc=400, out_nc=14, num_bins=80)
+    if args.snapshot != '':
+        saved_state_dict = torch.load(args.snapshot, weights_only=True)
+        model.load_state_dict({name: weight for name, weight in saved_state_dict.items() if name.startswith('hidden')}, strict=False)
+    
+    criterion = nn.MSELoss()
+    cos_criterion = nn.CosineEmbeddingLoss(reduction='sum')
 
     optimizer = optim.SGD(model.parameters(), lr=args.lr)
     milestones = args.lr_decay
@@ -63,28 +65,24 @@ if __name__ == '__main__':
     Loss_writer = SummaryWriter(log_dir = args.log_dir)
 
     for epoch in range(args.num_epochs):
-        for i, (inputs, outputs, types, sheet_idx) in tqdm(enumerate(train_loader)):
-            inputs = inputs.to(device)
-            labels = outputs.to(device)
-            types = types.long().to(device)
-            sheet_idx = sheet_idx.to(device)
-            
+        for i, (inputs, outputs, types) in tqdm(enumerate(train_loader)):
+            inputs = Variable(inputs)
+            labels = Variable(outputs)
             optimizer.zero_grad()
-            preds = model(inputs)
-            
-            batch_indices = torch.arange(preds.size(0), device=device)
-            preds = preds[batch_indices, sheet_idx.squeeze(), :]
-            types = types.view(-1, 1)
-            preds = preds.gather(1, types)
-           
-            loss = criterion(preds, labels)
+            preds = model(inputs, types)
+
+            # calculate loss
+            loss_flag = torch.ones(inputs.size(0))
+            cos_loss = cos_criterion(preds, labels, loss_flag)
+            mse_loss = criterion(preds, labels)
+            loss = cos_loss + mse_loss
             loss.backward()
             optimizer.step()
 
             Loss_writer.add_scalar('train_loss', loss, epoch)
             if (i+1) % 100 == 0:
-                print ('Epoch [%d/%d], Iter [%d/%d] Losses: %.4f'
-                       %(epoch+1, num_epochs, i+1, len(train_dataset)//batch_size, loss))
+                print ('Epoch [%d/%d], Iter [%d/%d] Losses: %.4f cos_loss: %.4f mse_loss: %.4f'
+                       %(epoch+1, num_epochs, i+1, len(dataset)//batch_size, loss, cos_loss, mse_loss))
             # Save models at numbered epochs.
 
         scheduler.step()
@@ -92,9 +90,5 @@ if __name__ == '__main__':
             print('Taking snapshot...')
             if not os.path.exists('snapshots/'):
                 os.makedirs('snapshots/')
-            torch.save(
-                model.state_dict(),
-                f'snapshots/{args.output_string}_epoch_{epoch}.pth',
-                _use_new_zipfile_serialization=True,
-                pickle_protocol=4
-            )
+            torch.save(model.state_dict(),
+            'snapshots/' + args.output_string + '_epoch_'+ str(epoch) + '.pth')
