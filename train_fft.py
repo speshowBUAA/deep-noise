@@ -43,7 +43,7 @@ if __name__ == '__main__':
     transformations = Normalizer(mean=[354.16, 32.17, 2649.37], std=[187.5, 647.17, 2045.62])
 
     if args.dataset == 'NoiseData':
-        dataset = NoiseDataFFT(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True, fft_out=80)
+        dataset = NoiseDataFFT(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True, fft_out=26)
 
     train_loader = DataLoader(dataset=dataset,
                             batch_size=batch_size,
@@ -51,7 +51,7 @@ if __name__ == '__main__':
                             num_workers=2)
     
 
-    model = NonLinearTypeBinModel(nc = args.nc, out_nc=14, num_bins=80, num_sheets=4)
+    model = NonLinearTypeBinModel(nc = args.nc, out_nc=18, num_bins=25, num_sheets=4)
     if args.snapshot != '':
         saved_state_dict = torch.load(args.snapshot, weights_only=True)
         model.load_state_dict({name: weight for name, weight in saved_state_dict.items() if name.startswith('hidden')}, strict=False)

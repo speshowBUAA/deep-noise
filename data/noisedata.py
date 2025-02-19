@@ -142,7 +142,7 @@ class NoiseDataBin(Dataset):
             return input, output, bin_output, bin_output0, bin_output1, bin_output2
 
 class NoiseDataFFT(Dataset):
-    def __init__(self, dir='../data', filename='data_final_fft.xlsx', use_type = None, transform = None, debug = None, fft_out=401):
+    def __init__(self, dir='../data', filename='data_final_fft_0217.xlsx', use_type = None, transform = None, debug = None, fft_out=401):
         self.dir = dir
         self.filename = filename
         self.use_type = use_type
@@ -176,7 +176,7 @@ class NoiseDataFFT(Dataset):
         input = [self.dataFrame[keys[1]][idx], self.dataFrame[keys[2]][idx], self.dataFrame[keys[3]][idx]]
         M1 = [self.dataFrame[keys[4]][idx]]
         # output = self.dataFrame.iloc[idx, 5:].tolist()   # 0~25600 401维
-        output = self.dataFrame.iloc[idx, 5:85].tolist()   # 0~4992 80维
+        output = self.dataFrame.iloc[idx, 5:30].tolist()   # 31.5~10000 26维
         sheet_idx = self.dataFrame['sheet_idx'][idx]
         if self.transform is not None:
             input = self.transform(input)

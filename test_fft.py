@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     print ('Loading snapshot.')
     # Load snapshot
-    model = NonLinearTypeBinModel(nc=400, out_nc=14, num_bins=80, num_sheets=4)
+    model = NonLinearTypeBinModel(nc=100, out_nc=18, num_bins=25, num_sheets=4)
     saved_state_dict = torch.load(snapshot_path, weights_only=True)
     model.load_state_dict(saved_state_dict)
     model.eval()

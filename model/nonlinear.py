@@ -2,13 +2,13 @@ import torch
 from torch import nn
 
 class NonLinear(nn.Module):
-    def __init__(self, in_nc=3, nc=1600, out_nc=1):
+    def __init__(self, in_nc=3, nc=1600, out_nc=1, num_sheets=4):
         super(NonLinear, self).__init__()
 
         self.hidden = nn.Linear(in_nc, nc)
         self.relu = nn.LeakyReLU()
-        self.out = nn.Linear(nc, out_nc * sheet_num)
-        self.sheet_num = sheet_num
+        self.out = nn.Linear(nc, out_nc * num_sheets)
+        self.num_sheets = num_sheets
         self.out_nc = out_nc
 
     def forward(self, inp):
@@ -68,7 +68,7 @@ class NonLinearMultiBin(nn.Module):
         return output, output0, output1, output2
 
 class NonLinearTypeBinModel(nn.Module):
-    def __init__(self, in_nc=3, nc=1600, out_nc=18, num_bins=51, num_sheets=4):
+    def __init__(self, in_nc=3, nc=1600, out_nc=18, num_bins=26, num_sheets=4):
         super(NonLinearTypeBinModel, self).__init__()
         self.num_bins = num_bins
         self.num_sheets = num_sheets
