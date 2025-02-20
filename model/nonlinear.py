@@ -32,6 +32,19 @@ class NonLinearType(nn.Module):
         out = self.out(x)
         output = out.gather(1, type_)
         return output
+    
+class NonLinearBin(nn.Module):
+    def __init__(self, in_nc=3, nc=1600, num_bins=25):
+        super(NonLinearBin, self).__init__()
+        self.num_bins = num_bins
+        self.hidden = nn.Linear(in_nc, nc)
+        self.relu = nn.LeakyReLU()
+        self.out = nn.Linear(nc, num_bins)
+
+    def forward(self, inp):
+        x = self.relu(self.hidden(inp))
+        output = self.out(x)
+        return output
 
 class NonLinearTypeBin(nn.Module):
     def __init__(self, in_nc=3, nc=1600, out_nc=18, num_bins=51):
