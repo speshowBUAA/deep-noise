@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--data_dir', dest='data_dir', help='Directory path for data.',
           default='../data', type=str)
     parser.add_argument('--filename', dest='filename', help='data filename.',
-          default='data_final_fft_train.xlsx', type=str)
+          default='data_final_fft_train_0217.xlsx', type=str)
     parser.add_argument('--output_string', dest='output_string', help='String appended to output snapshots.', default = '', type=str)
     parser.add_argument('--snapshot', dest='snapshot', help='Path of model snapshot.',
           default='', type=str)

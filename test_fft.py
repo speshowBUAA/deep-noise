@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('--data_dir', dest='data_dir', help='Directory path for data.',
           default='../data', type=str)
     parser.add_argument('--filename', dest='filename', help='data filename.',
-          default='data_final_fft_train.xlsx', type=str)
+          default='data_final_fft_test_0217.xlsx', type=str)
     parser.add_argument('--dataset', dest='dataset', help='Dataset type.', default='NoiseData', type=str)
     parser.add_argument('--snapshot', dest='snapshot', help='Name of model snapshot.',
           default='', type=str)
@@ -30,11 +30,11 @@ if __name__ == '__main__':
     transformations = Normalizer(mean=[354.16, 32.17, 2649.37], std=[187.5, 647.17, 2045.62])
 
     if args.dataset == 'NoiseData':
-        dataset = NoiseDataFFT(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True, fft_out=80)
+        dataset = NoiseDataFFT(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True, fft_out=26)
 
     print ('Loading snapshot.')
     # Load snapshot
-    model = NonLinearTypeBinModel(nc=100, out_nc=18, num_bins=25, num_sheets=4)
+    model = NonLinearTypeBinModel(nc=3200, out_nc=18, num_bins=25, num_sheets=4)
     saved_state_dict = torch.load(snapshot_path, weights_only=True)
     model.load_state_dict(saved_state_dict)
     model.eval()
@@ -66,6 +66,7 @@ if __name__ == '__main__':
         mse_loss = criterion(preds, labels)
         test_cos_error += torch.sum(cos_loss)
         test_mse_error += torch.sum(mse_loss)
-        # print(preds, labels, test_loss, torch.sum(test_loss))
+      #   print(inputs, types, sheet_idx)
+      #   print(preds, labels, test_cos_error, torch.sum(test_mse_error))
     
     print('Test error on the ' + str(total) +' test samples. cos: %.4f mse: %.4f' % (test_cos_error / total, test_mse_error * batch_size/ total))

@@ -150,7 +150,12 @@ class NoiseDataFFT(Dataset):
         self.debug = debug
         self.fft_out = fft_out
         try:
-            all_sheets = pd.read_excel(os.path.join(self.dir, self.filename), sheet_name=None)
+            if 'train' in filename:
+                all_sheets = pd.read_excel(os.path.join(self.dir, 'data_final_fft_train_0217.xlsx'), sheet_name=None)
+            elif 'test' in filename:
+                all_sheets = pd.read_excel(os.path.join(self.dir, 'data_final_fft_test_0217.xlsx'), sheet_name=None)
+            else:
+                all_sheets = pd.read_excel(os.path.join(self.dir, self.filename), sheet_name=None)
         except Exception as e:
             raise e
         self.dataFrame = pd.DataFrame()
@@ -197,7 +202,7 @@ class NoiseDataFFT(Dataset):
         else:
             M1 = torch.FloatTensor(M1)
         
-        output = 10*(torch.log10(output/4e-10))
+        # output = 10*(torch.log10(output/4e-10))
         
         if self.debug:
             return input, output, self.dataFrame.iloc[idx, 5:], M1
