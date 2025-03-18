@@ -142,7 +142,7 @@ class NoiseDataBin(Dataset):
             return input, output, bin_output, bin_output0, bin_output1, bin_output2
 
 class NoiseDataFFT(Dataset):
-    def __init__(self, dir='../data', filename='data_final_fft.xlsx', use_type = None, transform = None, debug = None, fft_out=401):
+    def __init__(self, dir='../data', filename='data_final_fft_0217.xlsx', use_type = None, transform = None, debug = None, fft_out=401):
         self.dir = dir
         self.filename = filename
         self.use_type = use_type
@@ -150,7 +150,12 @@ class NoiseDataFFT(Dataset):
         self.debug = debug
         self.fft_out = fft_out
         try:
-            all_sheets = pd.read_excel(os.path.join(self.dir, self.filename), sheet_name=None)
+            if 'train' in filename:
+                all_sheets = pd.read_excel(os.path.join(self.dir, 'data_final_fft_train_0217.xlsx'), sheet_name=None)
+            elif 'test' in filename:
+                all_sheets = pd.read_excel(os.path.join(self.dir, 'data_final_fft_test_0217.xlsx'), sheet_name=None)
+            else:
+                all_sheets = pd.read_excel(os.path.join(self.dir, self.filename), sheet_name=None)
         except Exception as e:
             raise e
         self.dataFrame = pd.DataFrame()
@@ -176,17 +181,33 @@ class NoiseDataFFT(Dataset):
         input = [self.dataFrame[keys[1]][idx], self.dataFrame[keys[2]][idx], self.dataFrame[keys[3]][idx]]
         M1 = [self.dataFrame[keys[4]][idx]]
         # output = self.dataFrame.iloc[idx, 5:].tolist()   # 0~25600 401维
-        output = self.dataFrame.iloc[idx, 5:85].tolist()   # 0~4992 80维
+        output = self.dataFrame.iloc[idx, 5:30].tolist()   # 31.5~10000 26维
         sheet_idx = self.dataFrame['sheet_idx'][idx]
+        
         if self.transform is not None:
             input = self.transform(input)
-        input = torch.tensor(input).to(torch.float32)
-        output = torch.tensor(output).to(torch.float32)
-        M1 = torch.tensor(M1).to(torch.float32)
+        
+        if isinstance(input, torch.Tensor):
+            input = input.clone().detach()
+        else:
+            input = torch.FloatTensor(input)
+        
+        if isinstance(output, torch.Tensor):
+            output = output.clone().detach()
+        else:
+            output = torch.FloatTensor(output)
+        
+        if isinstance(M1, torch.Tensor):
+            M1 = M1.clone().detach()
+        else:
+            M1 = torch.FloatTensor(M1)
+        
+        # output = 10*(torch.log10(output/4e-10))
+        
         if self.debug:
-            return input, 10*(torch.log10(output/4e-10)), self.dataFrame.iloc[idx, 5:], M1
+            return input, output, self.dataFrame.iloc[idx, 5:], M1
         if self.use_type:
             type_ = torch.LongTensor([self.dataFrame[keys[0]][idx]])
-            return input, 10*(torch.log10(output/4e-10)), type_, sheet_idx
+            return input, output, type_, sheet_idx
         else:
-            return input, 10*(torch.log10(output/4e-10)), sheet_idx
+            return input, output, sheet_idx
