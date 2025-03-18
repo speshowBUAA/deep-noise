@@ -110,3 +110,18 @@ class NonLinearBinModel(nn.Module):
         out = self.out(x)
         output = out.view(-1, self.num_sheets, self.num_bins)
         return output
+
+class NonLinearTypeModel(nn.Module):
+    def __init__(self, in_nc=3, nc=1600, out_nc=18, num_sheets=4):
+        super(NonLinearTypeModel, self).__init__()
+        self.num_sheets = num_sheets
+        self.out_nc = out_nc
+        self.hidden = nn.Linear(in_nc, nc)
+        self.relu = nn.LeakyReLU()
+        self.out = nn.Linear(nc, out_nc * num_sheets)
+
+    def forward(self, inp):
+        x = self.relu(self.hidden(inp))
+        out = self.out(x)
+        output = out.view(-1, self.num_sheets, self.out_nc)
+        return output

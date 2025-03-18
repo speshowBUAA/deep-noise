@@ -3,7 +3,7 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from data.noisedata import NoiseData
 from utils.transform import Normalizer
-from model.nonlinear import NonLinear, NonLinearType
+from model.nonlinear import NonLinear, NonLinearType, NonLinearTypeModel
 import torch
 from torch.autograd import Variable
 from torch import nn
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     print ('Loading snapshot.')
     # Load snapshot
-    model = NonLinear(nc=args.nc).to(device)
+    model = NonLinearTypeModel(nc=args.nc).to(device)
     saved_state_dict = torch.load(snapshot_path, map_location=device)
     model.load_state_dict(saved_state_dict)
     

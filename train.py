@@ -6,7 +6,7 @@ from torch import nn, optim
 import argparse
 from torch.utils.data import DataLoader
 from data.noisedata import NoiseData
-from model.nonlinear import NonLinear, NonLinearType
+from model.nonlinear import NonLinear, NonLinearType, NonLinearTypeModel
 from utils.transform import Normalizer
 from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
@@ -47,12 +47,12 @@ if __name__ == '__main__':
     if args.dataset == 'NoiseData':
         dataset = NoiseData(dir=args.data_dir, filename=args.filename, transform=transformations, use_type=True)
 
-    train_loader = DataLoader(dataset=train_dataset,
+    train_loader = DataLoader(dataset=dataset,
                             batch_size=batch_size,
                             shuffle=True,
                             num_workers=2)
     
-    model = NonLinear(nc = args.nc).to(device)
+    model = NonLinearTypeModel(nc=args.nc).to(device)
     criterion = nn.MSELoss().to(device)
 
     optimizer = optim.SGD(model.parameters(), lr=args.lr)
@@ -84,7 +84,7 @@ if __name__ == '__main__':
             Loss_writer.add_scalar('train_loss', loss, epoch)
             if (i+1) % 100 == 0:
                 print ('Epoch [%d/%d], Iter [%d/%d] Losses: %.4f'
-                       %(epoch+1, num_epochs, i+1, len(train_dataset)//batch_size, loss))
+                       %(epoch+1, num_epochs, i+1, len(dataset)//batch_size, loss))
             # Save models at numbered epochs.
 
         scheduler.step()
